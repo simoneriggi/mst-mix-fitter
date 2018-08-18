@@ -21,7 +21,7 @@ Software is currently been updated.
 ### **Prerequisites**
 Install the project mandatory dependencies:  
 * ROOT [https://root.cern.ch/]
-* R [https://www.r-project.org/], install also these additional packages: RInside, Rcpp, Matrix
+* R [https://www.r-project.org/], install also these additional packages: RInside, Rcpp, Matrix, moments, flexclust
 * log4cxx [https://logging.apache.org/log4cxx/]
 * boost [http://www.boost.org/]
 
