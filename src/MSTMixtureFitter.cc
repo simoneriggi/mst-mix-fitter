@@ -153,6 +153,10 @@ int MSTMixtureFitter::Init()
 	fSigma_min= ConfigParser::fCovarianceMinBound;
 	fSigma_max= ConfigParser::fCovarianceMaxBound;
 
+	fUseCovarianceEigenBoundConstraint= ConfigParser::fUseCovarianceEigenBoundConstraint;
+	fSigmaEigen_min= ConfigParser::fCovarianceEigenMinBound;
+	fSigmaEigen_max= ConfigParser::fCovarianceEigenMaxBound;
+
 	fUseDeltaBoundConstraint= ConfigParser::fUseDeltaBoundConstraint;
 	fDelta_min= ConfigParser::fDeltaMinBound;
 	fDelta_max= ConfigParser::fDeltaMaxBound;
@@ -162,32 +166,15 @@ int MSTMixtureFitter::Init()
 	fNu_max= ConfigParser::fNuMaxBound;
 
 	/*
-	fConstraintDataFileName= ConfigParser::fConstraintDataFileName;
 	fUseMeanConstraint= ConfigParser::fUseMeanConstraint;
-	fUseMeanDiffConstraint= ConfigParser::fUseMeanDiffConstraint;
 	fUseCovarianceConstraint= ConfigParser::fUseCovarianceConstraint;
-	fUseCovarianceBoundConstraint= ConfigParser::fUseCovarianceBoundConstraint;
 	fUseCovarianceEigenConstraint= ConfigParser::fUseCovarianceEigenConstraint;
-	fUseCovarianceEigenBoundConstraint= ConfigParser::fUseCovarianceEigenBoundConstraint;
 	fUseLocationConstraint= ConfigParser::fUseLocationConstraint;
 	fUseLocationDiffConstraint= ConfigParser::fUseLocationDiffConstraint;
 	fUseScaleMatrixConstraint= ConfigParser::fUseScaleMatrixConstraint;
 	fUseScaleMatrixBoundConstraint= ConfigParser::fUseScaleMatrixBoundConstraint;
 	fUseScaleMatrixEigenConstraint= ConfigParser::fUseScaleMatrixEigenConstraint;
 	fUseScaleMatrixEigenBoundConstraint= ConfigParser::fUseScaleMatrixEigenBoundConstraint;
-	fUseDeltaBoundConstraint= ConfigParser::fUseDeltaBoundConstraint;
-	fUseNuBoundConstraint= ConfigParser::fUseNuBoundConstraint;
-
-	fSaveFullInfo= ConfigParser::fSaveFullInfo;
-
-	fFixMeanDiffPar= false;
-
-	fUseAnnealing= ConfigParser::fUseAnnealing;
-	fAnnealingParStart= ConfigParser::fAnnealingParStart;	
-	fAnnealingParStep= ConfigParser::fAnnealingParStep;
-
-	fIsInteractiveRun= ConfigParser::fIsInteractiveRun;
-	
 	
 	fRandomizeStartPar= ConfigParser::fUseRandomStart;
 	fRandomizeStartMeanPar= ConfigParser::fUseRandomMeanStart;
@@ -197,314 +184,12 @@ int MSTMixtureFitter::Init()
 	fRandomizeStartDeltaPar= ConfigParser::fUseRandomDeltaStart;
 	fRandomizeStartNuPar= ConfigParser::fUseRandomNuStart;
 	fRandomizeStartFractionPar= ConfigParser::fUseRandomFractionStart;
-	fUseStoppingCriteria= ConfigParser::fUseStoppingCriteria;
-	fEpsilon= ConfigParser::fEpsilon;
-
-	fKsi_startFile= ConfigParser::fMeanStartPar;
-	fSigma_startFile= ConfigParser::fCovarianceStartPar;
-	fDelta_startFile= ConfigParser::fDeltaStartPar;
-	fNu_startFile= ConfigParser::fNuStartPar;
-	fP_startFile= ConfigParser::fFractionStartPar;
-	fV_startFile= ConfigParser::fCovarianceStartPar;
-	fSigmaEigen_startFile= ConfigParser::fCovarianceStartPar;
-
-
-	fKsi_true= ConfigParser::fMeanTruePar;
-	fSigma_true= ConfigParser::fCovarianceTruePar;
-	fDelta_true= ConfigParser::fDeltaTruePar;
-	fNu_true= ConfigParser::fNuTruePar;
-	fP_true= ConfigParser::fFractionTruePar;
-
-	fUseMeanOffset= ConfigParser::fUseMeanOffset;
-	fKsiOffset= ConfigParser::fMeanOffsetPar;
-	fUseDeltaOffset= ConfigParser::fUseDeltaOffset;
-	fDeltaOffset= ConfigParser::fDeltaOffsetPar;
-
-	fUseSigmaOffset= ConfigParser::fUseSigmaOffset;
-	fSigmaOffset= ConfigParser::fSigmaOffsetPar;
-		
-	fClusterAGroups= ConfigParser::fClusterAGroups;
-	fNClassificationGroups= ConfigParser::fNClassificationGroups;
-	fClusterLnAMin= ConfigParser::fClusterLnAMin;
-	fClusterLnAMax= ConfigParser::fClusterLnAMax;
-
-
-	fMeanParTolerance_min= ConfigParser::fMeanParTolerance_min;	
-	fMeanParTolerance_max= ConfigParser::fMeanParTolerance_max;
-	fMeanDiffParTolerance_min= ConfigParser::fMeanDiffParTolerance_min;	
-	fMeanDiffParTolerance_max= ConfigParser::fMeanDiffParTolerance_max;
-	fSigmaParTolerance_min= ConfigParser::fSigmaParTolerance_min;
-	fSigmaParTolerance_max= ConfigParser::fSigmaParTolerance_max;
-	fDeltaParTolerance_min= ConfigParser::fDeltaParTolerance_min;
-	fDeltaParTolerance_max= ConfigParser::fDeltaParTolerance_max;
 
 	fMeanConstraintSign= ConfigParser::fMeanConstraintSign;	
 	fSigmaConstraintSign= ConfigParser::fSigmaConstraintSign;	
-	
-	fDrawMinRange= ConfigParser::fDrawMinRange;
-	fDrawMaxRange= ConfigParser::fDrawMaxRange;
-	fDrawNBins= ConfigParser::fDrawNBins;
-	
-
-	//## Compute Ndof
-	fNdof= 0;
-	int nModelPars= 0;	
-	if(!fFixMeanPar) nModelPars+= fNDim;
-	if(!fFixCovariancePar) nModelPars+= fNDim*(fNDim+1)/2.;
-	if(!fFixDeltaPar) nModelPars+= fNDim;
-	if(!fFixNuPar) nModelPars+= fNDim;
-	
-	int nMixturePars= fNComponents*nModelPars;
-	if(!fFixFractionPar) nMixturePars+= fNComponents-1;
-	fNdof= nMixturePars;
-	cout<<"MSTMixtureFitter::Init(): Fit Ndof="<<fNdof<<endl;
-
-	//## Define data structures
-	fOutputFile= new TFile(fOutputFileName.c_str(),"RECREATE");
-	fOutputFile->cd();
-
-	fFitInfo= new TTree("FitInfo","FitInfo");
-	fFitInfo->Branch("NDim",&fNDim,"NDim/I");
-	fFitInfo->Branch("NComponents",&fNComponents,"NComponents/I");
-	fFitInfo->Branch("NIterations",&fNIterations,"NIterations/I");
-	fFitInfo->Branch("Fraction",fFraction,"Fraction[NComponents]/D");
-	fFitInfo->Branch("FractionErr",fFractionErr,"FractionErr[NComponents]/D");
-	fFitInfo->Branch("XmaxMean",fXmaxMean,"XmaxMean[NComponents]/D");
-	fFitInfo->Branch("XmaxMeanOffset",fXmaxMeanOffset,"XmaxMeanOffset[NComponents]/D");
-	fFitInfo->Branch("NmuMean",fNmuMean,"NmuMean[NComponents]/D");
-	fFitInfo->Branch("NmuMeanOffset",fNmuMeanOffset,"NmuMeanOffset[NComponents]/D");
-	fFitInfo->Branch("XmaxVar",fXmaxVar,"XmaxVar[NComponents]/D");
-	fFitInfo->Branch("XmaxVarOffset",fXmaxVarOffset,"XmaxVarOffset[NComponents]/D");	
-	fFitInfo->Branch("NmuVar",fNmuVar,"NmuVar[NComponents]/D");
-	fFitInfo->Branch("NmuVarOffset",fNmuVarOffset,"NmuVarOffset[NComponents]/D");	
-	fFitInfo->Branch("XmaxNmuCov",fXmaxNmuCov,"XmaxNmuCov[NComponents]/D");
-	fFitInfo->Branch("XmaxDelta",fXmaxDelta,"XmaxDelta[NComponents]/D");
-	fFitInfo->Branch("XmaxDeltaOffset",fXmaxDeltaOffset,"XmaxDeltaOffset[NComponents]/D");	
-	fFitInfo->Branch("NmuDelta",fNmuDelta,"NmuDelta[NComponents]/D");
-	fFitInfo->Branch("NmuDeltaOffset",fNmuDeltaOffset,"NmuDeltaOffset[NComponents]/D");
-	fFitInfo->Branch("Ndf",fNdf,"Ndf[NComponents]/D");
-	fFitInfo->Branch("StartXmaxMean",fXmaxMean_start,"StartXmaxMean[NComponents]/D");
-	fFitInfo->Branch("StartNmuMean",fNmuMean_start,"StartNmuMean[NComponents]/D");
-	fFitInfo->Branch("StartXmaxVar",fXmaxVar_start,"StartXmaxVar[NComponents]/D");
-	fFitInfo->Branch("StartNmuVar",fNmuVar_start,"StartNmuVar[NComponents]/D");
-	fFitInfo->Branch("StartXmaxNmuCov",fXmaxNmuCov_start,"StartXmaxNmuCov[NComponents]/D");
-	fFitInfo->Branch("StartXmaxDelta",fXmaxDelta_start,"StartXmaxDelta[NComponents]/D");
-	fFitInfo->Branch("StartNmuDelta",fNmuDelta_start,"StartNmuDelta[NComponents]/D");
-	fFitInfo->Branch("StartNdf",fNdf_start,"StartNdf[NComponents]/D");
-
-	fFitInfo->Branch("TrueFraction",fFraction_true,"TrueFraction[NComponents]/D");
-	fFitInfo->Branch("TrueXmaxMean",fXmaxMean_true,"TrueXmaxMean[NComponents]/D");
-	fFitInfo->Branch("TrueNmuMean",fNmuMean_true,"TrueNmuMean[NComponents]/D");
-	fFitInfo->Branch("TrueXmaxVar",fXmaxVar_true,"TrueXmaxVar[NComponents]/D");
-	fFitInfo->Branch("TrueNmuVar",fNmuVar_true,"TrueNmuVar[NComponents]/D");
-	fFitInfo->Branch("TrueXmaxNmuCov",fXmaxNmuCov_true,"TrueXmaxNmuCov[NComponents]/D");
-	fFitInfo->Branch("TrueXmaxDelta",fXmaxDelta_true,"TrueXmaxDelta[NComponents]/D");
-	fFitInfo->Branch("TrueNmuDelta",fNmuDelta_true,"TrueNmuDelta[NComponents]/D");
-	fFitInfo->Branch("TrueNdf",fNdf_true,"TrueNdf[NComponents]/D");
-	fFitInfo->Branch("TotClassificationEfficiency",&fTotClassificationEfficiency,"TotClassificationEfficiency/D");
-	fFitInfo->Branch("ClassificationEfficiency",fClassificationEfficiency,"ClassificationEfficiency[NComponents]/D");
-	fFitInfo->Branch("NEventPerGroup",fNEventPerGroup,"NEventPerGroup[NComponents]/D");
-	fFitInfo->Branch("Likelihood",&fLogLikelihood,"Likelihood/D");
-	fFitInfo->Branch("Ndof",&fNdof,"Ndof/D");
-	fFitInfo->Branch("FitStatus",&fFitStatus,"FitStatus/I");
-	
-	fFitIterInfo= new TTree("FitIterInfo","FitIterInfo");	
-	fFitIterInfo->Branch("IterNo",&fIterNo,"IterNo/I");
-	fFitIterInfo->Branch("Likelihood",&fLogLikelihood,"Likelihood/D");
-	fFitIterInfo->Branch("NComponents",&fNComponents,"NComponents/I");
-	fFitIterInfo->Branch("Fraction",fFraction,"Fraction[NComponents]/D");	
-	fFitIterInfo->Branch("XmaxMean",fXmaxMean,"XmaxMean[NComponents]/D");
-	fFitIterInfo->Branch("NmuMean",fNmuMean,"NmuMean[NComponents]/D");
-	fFitIterInfo->Branch("XmaxVar",fXmaxVar,"XmaxVar[NComponents]/D");
-	fFitIterInfo->Branch("NmuVar",fNmuVar,"NmuVar[NComponents]/D");
-	fFitIterInfo->Branch("XmaxNmuCov",fXmaxNmuCov,"XmaxNmuCov[NComponents]/D");
-	fFitIterInfo->Branch("XmaxDelta",fXmaxDelta,"XmaxDelta[NComponents]/D");
-	fFitIterInfo->Branch("NmuDelta",fNmuDelta,"NmuDelta[NComponents]/D");
-	fFitIterInfo->Branch("Ndf",fNdf,"Ndf[NComponents]/D");
-
-	fClassificationInfo= new TTree("ClassificationInfo","ClassificationInfo");	
-	fClassificationInfo->Branch("TrueType",&fTrueType,"TrueType/I");
-	fClassificationInfo->Branch("RecType",&fRecType,"RecType/I");
-
-
-	//## Get constrain graph from file
-	TFile* fConstraintFile= new TFile(fConstraintDataFileName.c_str(),"READ");
-	if( !fConstraintFile || fConstraintFile->IsZombie() ){
-		cerr<<"MSTMixtureFitter::Init(): Cannot open file with constrain data ...exit!"<<endl;
-		exit(1);
-	}
-
-	TGraph* KsiConstraintGraph_epos[fNDim];
-	TGraph* KsiConstraintGraph_sibyll[fNDim];
-	TGraph* KsiConstraintGraph_qgsjetII[fNDim];
-
-	TGraph* KsiConstraintGraph_min[fNDim];
-	TGraph* KsiConstraintGraph_max[fNDim];
-
-	TGraph* SigmaVarConstraintGraph_min[fNDim];
-	TGraph* SigmaVarConstraintGraph_max[fNDim];
-	TGraph* SigmaCovConstraintGraph_min[fNDim];
-	TGraph* SigmaCovConstraintGraph_max[fNDim];
-	TGraph* DeltaConstraintGraph_min[fNDim];
-	TGraph* DeltaConstraintGraph_max[fNDim];
-	TGraph* NuConstraintGraph_min= (TGraph*)fConstraintFile->Get("NuConstraint_min");
-	TGraph* NuConstraintGraph_max= (TGraph*)fConstraintFile->Get("NuConstraint_max");;
-	TGraph* SigmaEigenConstraintGraph_min[fNDim];
-	TGraph* SigmaEigenConstraintGraph_max[fNDim];
-
-	for(int j=0;j<fNDim;j++){
-		KsiConstraintGraph_min[j]= (TGraph*)fConstraintFile->Get( Form("KsiConstraint_min_%d",j+1) );
-		KsiConstraintGraph_max[j]= (TGraph*)fConstraintFile->Get( Form("KsiConstraint_max_%d",j+1) );
-		
-		SigmaVarConstraintGraph_min[j]= (TGraph*)fConstraintFile->Get(Form("SigmaVarConstraint_min_%d",j+1) );
-		SigmaVarConstraintGraph_max[j]= (TGraph*)fConstraintFile->Get(Form("SigmaVarConstraint_max_%d",j+1) );
-
-		SigmaCovConstraintGraph_min[j]= (TGraph*)fConstraintFile->Get( Form("SigmaCovConstraint_min_%d",j+1) );
-		SigmaCovConstraintGraph_max[j]= (TGraph*)fConstraintFile->Get( Form("SigmaCovConstraint_max_%d",j+1) );		
-
-		DeltaConstraintGraph_min[j]= (TGraph*)fConstraintFile->Get(Form("DeltaConstraint_min_%d",j+1) );
-		DeltaConstraintGraph_max[j]= (TGraph*)fConstraintFile->Get(Form("DeltaConstraint_max_%d",j+1) );
-	
-		KsiConstraintGraph_epos[j]= (TGraph*)fConstraintFile->Get( Form("Ksi_epos_%d",j+1) );
-		KsiConstraintGraph_sibyll[j]= (TGraph*)fConstraintFile->Get( Form("Ksi_sibyll_%d",j+1) );
-		KsiConstraintGraph_qgsjetII[j]= (TGraph*)fConstraintFile->Get( Form("Ksi_qgsjetII_%d",j+1) );
-		
-		SigmaEigenConstraintGraph_min[j]= (TGraph*)fConstraintFile->Get(Form("EigenConstraint_min_%d",j+1) );
-		SigmaEigenConstraintGraph_max[j]= (TGraph*)fConstraintFile->Get(Form("EigenConstraint_max_%d",j+1) );
-
-	}//end loop dim
-
-
-
-	cout<<"*** CONSTRAIN DATA ***"<<endl;
-	for(int k=0;k<fNComponents;k++){
-		TMatrixD Sigma_min(fNDim,fNDim);
-		TMatrixD Sigma_max(fNDim,fNDim);
-
-		TMatrixD Ksi_min(fNDim,1);
-		TMatrixD Ksi_max(fNDim,1);
-		
-		TMatrixD Delta_min(fNDim,1);
-		TMatrixD Delta_max(fNDim,1);
-
-		TMatrixD SigmaEigen_min(fNDim,1);
-		TMatrixD SigmaEigen_max(fNDim,1);
-
-		double Nu_min= NuConstraintGraph_min->Eval(log(fClusterAGroups[k]));
-		double Nu_max= NuConstraintGraph_max->Eval(log(fClusterAGroups[k]));
-		
-		for(int j=0;j<fNDim;j++){
-	
-			for(int l=0;l<fNDim;l++){
-				if(j==l){
-					//Sigma_min(j,j)= SigmaVarConstraintGraph_min[j]->Eval( log(fClusterAGroups[k]) );
-					//Sigma_max(j,j)= SigmaVarConstraintGraph_max[j]->Eval( log(fClusterAGroups[k]) );
-					Sigma_min(j,j)= (1-(*fSigmaParTolerance_min)(j,j))*SigmaVarConstraintGraph_min[j]->Eval( log(fClusterAGroups[k]) );
-					Sigma_max(j,j)= (1+(*fSigmaParTolerance_max)(j,j))*SigmaVarConstraintGraph_max[j]->Eval( log(fClusterAGroups[k]) );
-				}
-				else{
-					//Sigma_min(j,l)= SigmaCovConstraintGraph_min[j]->Eval(log(fClusterAGroups[k]));
-					//Sigma_max(j,l)= SigmaCovConstraintGraph_max[j]->Eval(log(fClusterAGroups[k]));
-					Sigma_min(j,l)= SigmaCovConstraintGraph_min[j]->Eval(log(fClusterAGroups[k])) - fabs(SigmaCovConstraintGraph_min[j]->Eval(log(fClusterAGroups[k])))*(*fSigmaParTolerance_min)(j,l);
-					Sigma_max(j,l)= SigmaCovConstraintGraph_max[j]->Eval(log(fClusterAGroups[k])) + fabs(SigmaCovConstraintGraph_max[j]->Eval(log(fClusterAGroups[k])))*(*fSigmaParTolerance_max)(j,l);
-				}
-			}
-
-			//Ksi_min(j,0)= KsiConstraintGraph_min[j]->Eval(log(fClusterAGroups[k]));
-			//Ksi_max(j,0)= KsiConstraintGraph_max[j]->Eval(log(fClusterAGroups[k]));
-			Ksi_min(j,0)= (1-(*fMeanParTolerance_min)(j,0))*KsiConstraintGraph_min[j]->Eval(log(fClusterAGroups[k]));
-			Ksi_max(j,0)= (1+(*fMeanParTolerance_max)(j,0))*KsiConstraintGraph_max[j]->Eval(log(fClusterAGroups[k]));
-
-			//Delta_min(j,0)= DeltaConstraintGraph_min[j]->Eval(log(fClusterAGroups[k]));
-			//Delta_max(j,0)= DeltaConstraintGraph_max[j]->Eval(log(fClusterAGroups[k]));
-			Delta_min(j,0)= (1-(*fDeltaParTolerance_min)(j,0))*DeltaConstraintGraph_min[j]->Eval(log(fClusterAGroups[k]));
-			Delta_max(j,0)= (1+(*fDeltaParTolerance_max)(j,0))*DeltaConstraintGraph_max[j]->Eval(log(fClusterAGroups[k]));
-			
-			SigmaEigen_min(j,0)= SigmaEigenConstraintGraph_min[j]->Eval(log(fClusterAGroups[k]));
-			SigmaEigen_max(j,0)= SigmaEigenConstraintGraph_max[j]->Eval(log(fClusterAGroups[k]));
-
-		}//end loop dim	
-		
-
-		fSigma_min.push_back(Sigma_min);
-		fSigma_max.push_back(Sigma_max);
-
-		fSigmaEigen_min.push_back(SigmaEigen_min);
-		fSigmaEigen_max.push_back(SigmaEigen_max);
-
-		fKsi_min.push_back(Ksi_min);
-		fKsi_max.push_back(Ksi_max);
-
-		fDelta_min.push_back(Delta_min);
-		fDelta_max.push_back(Delta_max);
-
-		fNu_min.push_back(Nu_min);
-		fNu_max.push_back(Nu_max);
-
-
-		cout<<"== Component "<<k+1<<" =="<<endl;	
-		cout<<"Nu min/max= "<<Nu_min<<"/"<<Nu_max<<endl;
-
-		cout<<"Ksi min= (";
-		for(int j=0;j<fNDim-1;j++) cout<<Ksi_min(j,0)<<",";
-		cout<<Ksi_min(fNDim-1,0)<<")"<<endl; 
-
-		cout<<"Ksi max= (";
-		for(int j=0;j<fNDim-1;j++) cout<<Ksi_max(j,0)<<",";
-		cout<<Ksi_max(fNDim-1,0)<<")"<<endl; 
-			
-		cout<<"delta min = (";
-		for(int j=0;j<fNDim-1;j++) cout<<Delta_min(j,0)<<",";
-		cout<<Delta_min(fNDim-1,0)<<")"<<endl; 
-		cout<<"delta max = (";
-		for(int j=0;j<fNDim-1;j++) cout<<Delta_max(j,0)<<",";
-		cout<<Delta_max(fNDim-1,0)<<")"<<endl; 
-			
-		cout<<"Sigma min = (";
-		for(int j=0;j<fNDim;j++){
-			for(int l=0;l<fNDim;l++) cout<<Sigma_min(j,l)<<",";
-		}	
-		cout<<")"<<endl;
-		cout<<"Sigma max = (";
-		for(int j=0;j<fNDim;j++){
-			for(int l=0;l<fNDim;l++) cout<<Sigma_max(j,l)<<",";
-		}	
-		cout<<")"<<endl;
-
-		
-	}//end loop components
-
-
-	double meanDiffTolerance= 0;
-	//double meanDiffTolerance= 1;
-	//double meanDiffTolerance= 0.;
-
-	for(int k=0;k<fNComponents;k++){
-		TMatrixD KsiDiff_min(fNDim,1);
-		TMatrixD KsiDiff_max(fNDim,1);
-
-		for(int j=0;j<fNDim;j++){
-			double ksiDiff_epos= KsiConstraintGraph_epos[j]->Eval(log(fClusterAGroups[k]))-KsiConstraintGraph_epos[j]->Eval(log(fClusterAGroups[0]));
-			double ksiDiff_sibyll= KsiConstraintGraph_sibyll[j]->Eval(log(fClusterAGroups[k]))-KsiConstraintGraph_sibyll[j]->Eval(log(fClusterAGroups[0]));
-			double ksiDiff_qgsjetII= KsiConstraintGraph_qgsjetII[j]->Eval(log(fClusterAGroups[k]))-KsiConstraintGraph_qgsjetII[j]->Eval(log(fClusterAGroups[0]));
-			
-			double minDiff= min(min(ksiDiff_epos,ksiDiff_sibyll),ksiDiff_qgsjetII);
-			double maxDiff= max(max(ksiDiff_epos,ksiDiff_sibyll),ksiDiff_qgsjetII);
-			double toleranceRegion= fabs(maxDiff-minDiff)*meanDiffTolerance;
-			//KsiDiff_min(j,0)= minDiff - toleranceRegion;
-			//KsiDiff_max(j,0)= maxDiff + toleranceRegion;
-			KsiDiff_min(j,0)= minDiff*(1-(*fMeanDiffParTolerance_min)(j,0));
-			KsiDiff_max(j,0)= maxDiff*(1+(*fMeanDiffParTolerance_max)(j,0));
-
-			cout<<"COMPONENT "<<k+1<<"  j="<<j<<"  ksiDiffModels("<<ksiDiff_epos<<","<<ksiDiff_qgsjetII<<","<<ksiDiff_sibyll<<")  min/max: "<<KsiDiff_min(j,0)<<"/"<<KsiDiff_max(j,0)<<"  toleranceRegion="<<toleranceRegion<<"  fabs(maxDiff-minDiff)="<<fabs(maxDiff-minDiff)<<endl;
-		}//end loop dim
-
-		fKsiDiff_min.push_back(KsiDiff_min);
-		fKsiDiff_max.push_back(KsiDiff_max);
-	
-	}//end loop components
 	*/
-
+	
+	
 	return 0;
 
 }//close MSTMixtureFitter::Init()
@@ -574,103 +259,6 @@ int MSTMixtureFitter::ReadData()
 	}
 	INFO_LOG(ss.str());
 	
-
-	/*
-	//## Init data histos
-	double histoRangeX= fMaxDataRange[0]-fMinDataRange[0];
-	double histoRangeTolX= 0.5;
-	double histoMinX= fMinDataRange[0] - histoRangeTolX*fabs(histoRangeX);
-	double histoMaxX= fMaxDataRange[0] + histoRangeTolX*fabs(histoRangeX);
-
-	double histoRangeY= fMaxDataRange[0]-fMinDataRange[0];
-	double histoRangeTolY= 0.5;
-	double histoMinY= fMinDataRange[0] - histoRangeTolY*fabs(histoRangeY);
-	double histoMaxY= fMaxDataRange[0] + histoRangeTolY*fabs(histoRangeY);
-	if(fNDim>1){
-		histoRangeY= fMaxDataRange[1]-fMinDataRange[1];
-		histoMinY= fMinDataRange[1] - histoRangeTolY*fabs(histoRangeY);
-		histoMaxY= fMaxDataRange[1] + histoRangeTolY*fabs(histoRangeY);
-	}
-	
-
-	fDataGraph= new TGraph;
-
-	//fDataHisto= new TH2D("DataHisto","DataHisto",30,600,1200,20,0,2);
-	//fDataHisto= new TH2D("DataHisto","DataHisto",20,0,2,20,0,2);
-	//fDataHisto= new TH2D("DataHisto","DataHisto",30,600,1200,40,0,200);
-	//fDataHisto= new TH2D("DataHisto","DataHisto",25,histoMinX,histoMaxX,25,histoMinY,histoMaxY);
-	fDataHisto= new TH2D("DataHisto","DataHisto",fDrawNBins[0],fDrawMinRange[0],fDrawMaxRange[0],fDrawNBins[1],fDrawMinRange[1],fDrawMaxRange[1]);
-	fDataHisto->SetLineColor(kBlack);
-	fDataHisto->SetMarkerStyle(8);
-	fDataHisto->SetMarkerSize(1.1);
-	fDataHisto->Sumw2();
-	
-	//fFitHisto= new TH2D("FitHisto","FitHisto",30,600,1200,20,0,2);
-	//fFitHisto= new TH2D("FitHisto","FitHisto",20,0,2,20,0,2);
-	//fFitHisto= new TH2D("FitHisto","FitHisto",30,600,1200,20,0,200);
-	//fFitHisto= new TH2D("FitHisto","FitHisto",25,histoMinX,histoMaxX,25,histoMinY,histoMaxY);	
-	fFitHisto= new TH2D("FitHisto","FitHisto",fDrawNBins[0],fDrawMinRange[0],fDrawMaxRange[0],fDrawNBins[1],fDrawMinRange[1],fDrawMaxRange[1]);	
-	fFitHisto->SetLineColor(kRed);
-	fFitHisto->SetMarkerStyle(8);
-	fFitHisto->SetMarkerSize(1.1);
-	fFitHisto->Sumw2();
-
-	//fDataXHisto= new TH1D("DataXHisto","DataXHisto",30,600,1200);
-	//fDataXHisto= new TH1D("DataXHisto","DataXHisto",25,histoMinX,histoMaxX);
-	fDataXHisto= new TH1D("DataXHisto","DataXHisto",fDrawNBins[0],fDrawMinRange[0],fDrawMaxRange[0]);
-	fDataXHisto->SetLineColor(kBlack);
-	fDataXHisto->SetMarkerStyle(8);
-	fDataXHisto->SetMarkerSize(1.1);
-	fDataXHisto->Sumw2();
-	
-	//fDataYHisto= new TH1D("DataYHisto","DataYHisto",40,0,200);
-	//fDataYHisto= new TH1D("DataYHisto","DataYHisto",25,histoMinY,histoMaxY);
-	fDataYHisto= new TH1D("DataYHisto","DataYHisto",fDrawNBins[1],fDrawMinRange[1],fDrawMaxRange[1]);
-	fDataYHisto->SetLineColor(kBlack);
-	fDataYHisto->SetMarkerStyle(8);
-	fDataYHisto->SetMarkerSize(1.1);
-	fDataYHisto->Sumw2();
-
-	//fFitXHisto= new TH1D("FitXHisto","FitXHisto",30,600,1200);
-	//fFitXHisto= new TH1D("FitXHisto","FitXHisto",25,histoMinX,histoMaxX);
-	fFitXHisto= new TH1D("FitXHisto","FitXHisto",fDrawNBins[0],fDrawMinRange[0],fDrawMaxRange[0]);
-	fFitXHisto->SetLineColor(kBlack);
-	fFitXHisto->SetMarkerStyle(8);
-	fFitXHisto->SetMarkerSize(1.1);
-	fFitXHisto->Sumw2();
-	
-	//fFitYHisto= new TH1D("FitYHisto","FitYHisto",40,0,200);
-	//fFitYHisto= new TH1D("FitYHisto","FitYHisto",25,histoMinY,histoMaxY);
-	fFitYHisto= new TH1D("FitYHisto","FitYHisto",fDrawNBins[1],fDrawMinRange[1],fDrawMaxRange[1]);
-	fFitYHisto->SetLineColor(kBlack);
-	fFitYHisto->SetMarkerStyle(8);
-	fFitYHisto->SetMarkerSize(1.1);
-	fFitYHisto->Sumw2();
-
-	for(int k=0;k<fNComponents;k++){
-		int color= kBlack;
-		if(k==0) color=	kRed;
-		else if(k==1) color= kGreen+1;
-		else if(k==2) color= kBlue+1;
-
-		TString histoName= Form("FitXHisto_Component%d",k+1);
-		//fFitXComponentsHisto[k]= new TH1D(histoName,histoName,25,histoMinX,histoMaxX);
-		fFitXComponentsHisto[k]= new TH1D(histoName,histoName,fDrawNBins[0],fDrawMinRange[0],fDrawMaxRange[0]);
-		fFitXComponentsHisto[k]->SetLineColor(color);
-		fFitXComponentsHisto[k]->SetMarkerStyle(8);
-		fFitXComponentsHisto[k]->SetMarkerSize(1.1);
-		fFitXComponentsHisto[k]->Sumw2();
-
-		histoName= Form("FitYHisto_Component%d",k+1);
-		//fFitYComponentsHisto[k]= new TH1D(histoName,histoName,25,histoMinY,histoMaxY);
-		fFitYComponentsHisto[k]= new TH1D(histoName,histoName,fDrawNBins[1],fDrawMinRange[1],fDrawMaxRange[1]);		
-		fFitYComponentsHisto[k]->SetLineColor(color);
-		fFitYComponentsHisto[k]->SetMarkerStyle(8);
-		fFitYComponentsHisto[k]->SetMarkerSize(1.1);
-		fFitYComponentsHisto[k]->Sumw2();
-	}//end loop components
-	*/
-
 	return 0;	
 
 }//close ReadData()
@@ -834,7 +422,7 @@ int MSTMixtureFitter::InitializeFitPars()
 		fSigmaInv.push_back(tmpMatrix);
 		fSigmaDet.push_back(0.);
 		fOmega.push_back(tmpMatrix);
-		fOmegaEigen.push_back(tmpMatrix);
+		fOmegaEigen.push_back(tmpVect);
 		fOmegaInv.push_back(tmpMatrix);
 		fOmegaDet.push_back(0.);
 		fP.push_back(1./fNComponents);
@@ -844,7 +432,7 @@ int MSTMixtureFitter::InitializeFitPars()
 		fMu_safe.push_back(tmpVect);
 		fDelta_safe.push_back(tmpVect);	
 		fOmega_safe.push_back(tmpMatrix);
-		fOmegaEigen_safe.push_back(tmpMatrix);		
+		fOmegaEigen_safe.push_back(tmpVect);		
 		fSigma_safe.push_back(tmpMatrix);
 		fSigmaEigen_safe.push_back(tmpVect);		
 		fP_safe.push_back(1./fNComponents);
@@ -1153,8 +741,12 @@ int MSTMixtureFitter::CheckCovariance()
 
 		//## Update covariance matrix
 		MathUtils::ScaleToCovarianceMatrix(fSigma[k],fOmega[k],fDelta[k],fNu[k]);
+		if(MathUtils::MakeSymmPosDefCovarianceMatrix(fSigma[k])<0){
+			WARN_LOG("Failed to correct scale matrix for component no. "<<k+1<<"!");
+			return -1;	
+		}
 		fSigmaInv[k]= TMatrixD(TMatrixD::kInverted,fSigma[k]);
-		fSigmaDet[k]= fSigma[k].Determinant();	
+		fSigmaDet[k]= fSigma[k].Determinant();			
 		
 		//## Update eigenvalues & eigenvectors
 		INFO_LOG("Update eigenvalues & eigenvectors of scale matrix ...");	
